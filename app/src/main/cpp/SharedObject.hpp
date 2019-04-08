@@ -89,23 +89,32 @@ public:
   /**
    *
    * \param objectName the name of the SO. you need it to be the same in all
+   * \param profile do we create or only read\write
    * processes which uses it \param profile see #Profile
    */
   SharedObject(std::string objectName, Profile profile,
                std::string sharedMemoryFolder = "");
+
+  SharedObject(int fd);
 
   /** dtor
    * if you are the 'creator' of the SO, it will be destroyed here
    */
   ~SharedObject();
 
-  /** Aquire a synchronized handle to the SO
+  /** Acquire a synchronized handle to the SO
    *
    * \return a Handle to the SO. the handle is used as pointer to the SO.
    *    The handle is scoped, so the lock is released
    *    at the end of the scope.
    */
-  Handle Aquire();
+  Handle Acquire();
+
+  /** Get the shared memory FD
+   *
+   * @return the shared memory FD
+   */
+  int FD() const;
 
 private:
   /** In shared memory every entity should be named */
@@ -120,8 +129,8 @@ private:
   const std::string m_sharedMemoryFolder;
 
   int m_sharedMemoryFD = -1;
-  char *m_sharedMemory = nullptr;
 };
+char *m_sharedMemory = nullptr;
 
 //! template implementation
 #include "SharedObject.inl"
