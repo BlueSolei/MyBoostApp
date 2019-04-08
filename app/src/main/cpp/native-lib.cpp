@@ -24,25 +24,6 @@ using SharedPayloadUPtr = std::unique_ptr<SharedPayload>;
 
 SharedPayloadUPtr g_payload;
 
-SharedPayload* CreateSharedObject(int fd)
-{
-  if(g_payload) return g_payload.get();
-
-  try {
-    g_payload = std::make_unique<SharedPayload>(fd);
-  }
-  catch(std::exception& e)
-  {
-    LOGE("Failed to create shared object. error: '%s'", e.what());
-  }
-  catch(...)
-  {
-    LOGE("Failed to create shared object. error: '<unknown>'");
-  }
-
-  return g_payload.get();
-}
-
 SharedPayload* CreateSharedObject(const std::string& name, SharedPayload::Profile profile)
 {
   if(g_payload) return g_payload.get();
@@ -95,27 +76,4 @@ Java_com_example_myboostapp_SharedObject_nativeSetValue(JNIEnv *env,
   auto handle = payload->Acquire();
   handle->debuggerExist = value;
   LOGD("SET: C++ object '%s' value is %d", name, (int)handle->debuggerExist);
-}
-
-extern "C" JNIIMPORT int JNICALL
-Java_com_example_myboostapp_SharedObject_getSharedObjectFD(JNIEnv *env,
-                                               jobject /* this */,
-                                               jstring sharedObjectName)
-{
-  const char *name = env->GetStringUTFChars(sharedObjectName, NULL);
-  defer{ env->ReleaseStringUTFChars(sharedObjectName, name); };
-  LOGD("CreateByName: C++ object '%s'", name);
-  auto payload = CreateSharedObject(name, SharedPayload::Profile::creator);
-  auto fd = (payload ? payload->FD() : -1);
-  LOGD("CreateByName: C++ object '%s', fd is ", name, fd);
-  return fd;
-}
-
-extern "C" JNIIMPORT void JNICALL
-Java_com_example_myboostapp_SharedObject_createSharedObject(JNIEnv *env,
-                                                            jobject /* this */,
-                                                            jint fd)
-{
-  LOGD("CreateFromFD: C++ object for fd: %d", fd);
-  CreateSharedObject(fd);
 }

@@ -1,5 +1,10 @@
 #pragma once
 
+#define BOOST_INTERPROCESS_SHARED_DIR_PATH "/"
+//#define BOOST_INTERPROCESS_SHARED_DIR_PATH "/data/data/com.example.myboostapp/"
+
+#include <boost/interprocess/sync/interprocess_mutex.hpp>
+#include <boost/interprocess/interprocess_fwd.hpp>
 #include <functional>
 #include <memory>
 #include <string>
@@ -65,15 +70,9 @@ public:
   using FnReleaseObject = std::function<void(T *)>;
   using Handle = std::unique_ptr<T, FnReleaseObject>;
 
-  //! For now, we won't lock our shared object
-  struct Mutex {
-    void lock() {}
-    void unlock() {}
-  };
-
   struct SyncedObject {
     T object;
-    Mutex mutex;
+    boost::interprocess::interprocess_mutex mutex;
   };
 
   /** Are you the SO 'creator' or the SO already exits, and you are just a
@@ -89,13 +88,10 @@ public:
   /**
    *
    * \param objectName the name of the SO. you need it to be the same in all
-   * \param profile do we create or only read\write
    * processes which uses it \param profile see #Profile
    */
   SharedObject(std::string objectName, Profile profile,
                std::string sharedMemoryFolder = "");
-
-  SharedObject(int fd);
 
   /** dtor
    * if you are the 'creator' of the SO, it will be destroyed here
@@ -110,12 +106,6 @@ public:
    */
   Handle Acquire();
 
-  /** Get the shared memory FD
-   *
-   * @return the shared memory FD
-   */
-  int FD() const;
-
 private:
   /** In shared memory every entity should be named */
   const char *SharedMemoryName() const;
@@ -127,10 +117,9 @@ private:
   const Profile m_profile;
   const std::string m_sharedMemoryName;
   const std::string m_sharedMemoryFolder;
-
-  int m_sharedMemoryFD = -1;
+  std::unique_ptr<boost::interprocess::shared_memory_object> m_sharedMemory;
+  std::unique_ptr<boost::interprocess::mapped_region> m_memoryRegion;
 };
-char *m_sharedMemory = nullptr;
 
 //! template implementation
 #include "SharedObject.inl"
