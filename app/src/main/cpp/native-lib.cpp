@@ -41,7 +41,7 @@ std::string ListPS()
 std::string ListProc(int pid, int stream)
 {
   auto output = ExhostPipe("ls /proc/" + std::to_string(pid) + "/");
-  return output ? output.value() : std::string("Error: ") + output.error();
+  return output.value_or(std::string() + "Error: " + output.error());
 }
 
 tl::expected<int, std::string> GetPID(const std::string& procName)
@@ -162,6 +162,8 @@ extern "C" JNIEXPORT jstring JNICALL
 Java_com_example_myboostapp_Communicate_nativePS(JNIEnv* env, jobject /*this*/)
 {
   auto pid = GetPID("com.example.myboostapp:other");
-  auto strPID = std::string() + "pid of service is: " + std::to_string(pid.value_or(-1));
+  auto streams = pid.map([](int pid) { return std::to_string(pid); });
+//  auto streams = pid.and_then([](int pid) { return ExhostPipe("ls /proc/" + std::to_string(pid) + "/fd"); });
+  auto strPID = std::string() + "streams of service are: [" + streams.value_or("-1") + "]";
   return env->NewStringUTF(strPID.c_str());
 }
