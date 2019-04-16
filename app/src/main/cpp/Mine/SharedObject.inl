@@ -1,11 +1,16 @@
 #pragma once
 
+#include <boost/interprocess/managed_shared_memory.hpp>
+#include <boost/interprocess/shared_memory_object.hpp>
+#include <boost/interprocess/sync/interprocess_mutex.hpp>
+
 template <class T>
 SharedObject<T>::SharedObject(Profile profile)
-        : m_profile(profile), m_ipc(profile == Profile::user ? IPC(IPC::Client()) : IPC(IPC::Server(), [this](std::string_view message)
+        : m_profile(profile), m_ipc(profile == Profile::creator ? IPC::Role::server : IPC::Role::client, [this](std::string_view message)
 {
+  //this->CopyObject(*reinterpret_cast<const Payload*>(message.data()));
   return SharedObject::MyObject(this);
-})) {
+}) {
 
 }
 

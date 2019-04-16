@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include "Mine/UnixDomainSocket.h"
+#include "UnixDomainSocket.h"
 
 // clang-format off
 /** Class for a shared object in shared memory

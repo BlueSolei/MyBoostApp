@@ -19,6 +19,11 @@ public class SharedObject {
         nativeSetValue(name, value);
     }
 
+    public void stop(){
+        nativeStopServer(name);
+    }
+
+    private native int nativeStopServer(String name);
     private native int nativeGetValue(String name);
     private native void nativeSetValue(String name, int value);
 }

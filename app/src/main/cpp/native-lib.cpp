@@ -3,9 +3,11 @@
 
 #include <memory>
 
+#define ANDROID_LOG_TAG "SharedObject"
 #include "SharedObject.hpp"
 #include "defer.hpp"
-#include "AndroidLog.h"
+#include "Mine/AndroidLog.h"
+
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_example_myboostapp_MainActivity_stringFromJNI(
@@ -29,7 +31,7 @@ SharedPayload* CreateSharedObject(const std::string& name, SharedPayload::Profil
   if(g_payload) return g_payload.get();
 
   try {
-    g_payload = std::make_unique<SharedPayload>(name, profile);
+    g_payload = std::make_unique<SharedPayload>(profile);
   }
   catch(std::exception& e)
   {
@@ -77,3 +79,14 @@ Java_com_example_myboostapp_SharedObject_nativeSetValue(JNIEnv *env,
   handle->debuggerExist = value;
   LOGD("SET: C++ object '%s' value is %d", name, (int)handle->debuggerExist);
 }
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_example_myboostapp_SharedObject_nativeStopServer(JNIEnv *env,
+                                                          jobject /* this */,
+                                                          jstring sharedObjectName)
+{
+  LOGD("SET: C++ server is stopping ...");
+  g_payload.reset();
+  LOGD("SET: C++ server has stopped");
+}
+

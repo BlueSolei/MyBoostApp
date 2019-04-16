@@ -19,26 +19,28 @@ public class MyService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "MyService start...");
 
-        String name = getString(R.string.shared_object_name);
-        payload = new SharedObject(name);
-        payload.setValue(0);
-
         new Thread(new Runnable() {
             @Override
             public void run() {
-                for(int i = 0; i < 1000; ++i)
+                String name = getString(R.string.shared_object_name);
+                payload = new SharedObject(name);
+
+                //payload.setValue(0);
+
+                for(int i = 0; i < 10; ++i)
                 {
                     try
                     {
-                        Thread.sleep(1000);
-                        payload.setValue(i);
-                        Log.d(TAG, String.format("MyService waked up. no. %d, set value to %s", i, i));
+                        Thread.sleep(2000);
+                        int answer = payload.getValue();
+                        Log.d(TAG, String.format("MyService waked up. no. %d, get value to %s", i, answer));
                     }
                     catch (Exception e)
                     {
                         Log.d(TAG, "MyService payload Sleep() failed.");
                     }
                 }
+                payload.stop();
             }
         }).start();
 
