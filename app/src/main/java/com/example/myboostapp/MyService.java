@@ -18,31 +18,39 @@ public class MyService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "MyService start...");
+        Communicate communicate = new Communicate();
+        String[] ps = communicate.ps().split("\n");
+        Log.d(TAG, "PS Result:");
+        for (String line : ps)
+        {
+            Log.d(TAG, String.format("%s", line));
+        }
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                String name = getString(R.string.shared_object_name);
-                payload = new SharedObject(name);
-
-                //payload.setValue(0);
-
-                for(int i = 0; i < 10; ++i)
-                {
-                    try
-                    {
-                        Thread.sleep(2000);
-                        int answer = payload.getValue();
-                        Log.d(TAG, String.format("MyService waked up. no. %d, get value to %s", i, answer));
-                    }
-                    catch (Exception e)
-                    {
-                        Log.d(TAG, "MyService payload Sleep() failed.");
-                    }
-                }
-                payload.stop();
-            }
-        }).start();
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                String name = getString(R.string.shared_object_name);
+//                payload = new SharedObject(name);
+//                Log.d(TAG, String.format("PS Result:\n %s", payload.ps()));
+//
+//                //payload.setValue(0);
+//
+//                for(int i = 0; i < 10; ++i)
+//                {
+//                    try
+//                    {
+//                        Thread.sleep(2000);
+//                        int answer = payload.getValue();
+//                        Log.d(TAG, String.format("MyService waked up. no. %d, get value to %s", i, answer));
+//                    }
+//                    catch (Exception e)
+//                    {
+//                        Log.d(TAG, "MyService payload Sleep() failed.");
+//                    }
+//                }
+//                payload.stop();
+//            }
+//        }).start();
 
         return START_NOT_STICKY;
     }

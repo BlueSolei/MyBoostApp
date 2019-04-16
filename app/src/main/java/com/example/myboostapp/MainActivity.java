@@ -3,6 +3,7 @@ package com.example.myboostapp;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -19,12 +20,14 @@ public class MainActivity extends AppCompatActivity {
     private SharedObject payload;
     private TextView tv;
     private int counter = 0;
+    private Communicate communicate = new Communicate();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         tv = findViewById(R.id.sample_text);
+        tv.setMovementMethod(new ScrollingMovementMethod());
 
         String payloadName = getString(R.string.shared_object_name);
         payload = new SharedObject(payloadName);
@@ -48,7 +51,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Example of a call to a native method
-                tv.setText(String.format("%d: Payload value is %s", counter++, payload.getValue()));
+                payload.setValue(counter);
+
+                tv.setText(String.format("%d: Payload\n value\n is\n %s\n", counter, communicate.ps()));
+                ++counter;
             }
         });
     }

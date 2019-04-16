@@ -2,12 +2,41 @@
 #include <string>
 
 #include <memory>
+#include <regex>
 
 #define ANDROID_LOG_TAG "SharedObject"
 #include "SharedObject.hpp"
 #include "defer.hpp"
 #include "Mine/AndroidLog.h"
+#include "Mine/expected.hpp"
 
+
+tl::expected<std::string, std::string> ExhostPipe(std::string command)
+{
+  std::string output;
+  FILE *fpipe = nullptr;
+  char line[0x1 << 10];
+  if ( !(fpipe = (FILE*)popen(command.c_str(),"r")) )
+  {
+    sscanf(line, "%s", strerror(errno));
+    return tl::make_unexpected(line);
+  }
+  else
+  {
+    while (fgets( line, sizeof line, fpipe))
+    {
+      output += line;
+    }
+    pclose(fpipe);
+  }
+  return output;
+}
+
+std::string ListPS()
+{
+  auto output = ExhostPipe("/system/bin/ps");
+  return output ? output.value() : std::string("Error: ") + output.error();
+}
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_example_myboostapp_MainActivity_stringFromJNI(
@@ -90,3 +119,8 @@ Java_com_example_myboostapp_SharedObject_nativeStopServer(JNIEnv *env,
   LOGD("SET: C++ server has stopped");
 }
 
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_example_myboostapp_Communicate_nativePS(JNIEnv* env, jobject /*this*/)
+{
+  return env->NewStringUTF(ListPS().c_str());
+}
