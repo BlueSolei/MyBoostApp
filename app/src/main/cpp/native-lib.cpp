@@ -38,6 +38,45 @@ std::string ListPS()
   return output ? output.value() : std::string("Error: ") + output.error();
 }
 
+std::string ListProc(int pid, int stream)
+{
+  auto output = ExhostPipe("ls /proc/" + std::to_string(pid) + "/");
+  return output ? output.value() : std::string("Error: ") + output.error();
+}
+
+tl::expected<int, std::string> GetPID(const std::string& procName)
+{
+  auto pid = ExhostPipe("/system/bin/ps")
+          .and_then([&](const std::string& proccessList) -> tl::expected<std::string,std::string>
+               {
+                 std::regex regexPID(R"(\w+ +(\d+) +\d+ +\d+ +\d+ +\w+ +\w+ +\w +)" + procName);
+                 std::smatch matchPID;
+                 if(std::regex_search(proccessList, matchPID, regexPID) && (matchPID.size() == 2))
+                 {
+                   std::string strPID = matchPID[1].str();
+                   return strPID;
+                 } else{
+                   return tl::make_unexpected(std::string() + "Failed to find process '" + procName + "' in process list");
+                 }
+               })
+          .and_then([](const std::string& strPID) -> tl::expected<int, std::string>
+               {
+                 try {
+                   std::size_t count = 0;
+                   int pid = std::stoi(strPID, &count);
+                   if(count != strPID.size()) {
+                     throw std::invalid_argument("");
+                   }
+                   return pid;
+                 }
+                 catch(std::exception& /*e*/)
+                 {
+                   return tl::make_unexpected(std::string() + "PID '" + strPID + "' is ill formed");
+                 }
+               });
+  return pid;
+}
+
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_example_myboostapp_MainActivity_stringFromJNI(
         JNIEnv *env,
@@ -122,5 +161,7 @@ Java_com_example_myboostapp_SharedObject_nativeStopServer(JNIEnv *env,
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_example_myboostapp_Communicate_nativePS(JNIEnv* env, jobject /*this*/)
 {
-  return env->NewStringUTF(ListPS().c_str());
+  auto pid = GetPID("com.example.myboostapp:other");
+  auto strPID = std::string() + "pid of service is: " + std::to_string(pid.value_or(-1));
+  return env->NewStringUTF(strPID.c_str());
 }
